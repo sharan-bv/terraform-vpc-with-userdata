@@ -2,6 +2,10 @@
 pipeline {
     agent any
 
+    tools {
+        terraform 'terraform'
+    }
+
     stages {
         stage ('git checkout'){
             steps {
