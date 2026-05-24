@@ -1,9 +1,9 @@
-# Infrastructure Pipelines
+// Infrastructure Pipelines
 pipeline {
     agent any
 
     stages {
-        stage ("Inilizate the Terraform"){
+        stage ("Initialize the Terraform"){
             steps {
                 sh "terraform init"
             }
