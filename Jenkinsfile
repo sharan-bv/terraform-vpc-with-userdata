@@ -16,11 +16,11 @@ pipeline {
         stage ("Verify the resouces that will be created"){
             steps {
                 sh "terraform plan > plan.txt"
-                sh cat plan.txt
+                sh "cat plan.txt"
             }
         }
         stage ("Create the complete Infra"){
-            input ("approval",approver:sharan)
+            input message: 'Approve Terraform Apply?', submitter: 'sharan'
             steps {
                 sh "terraform apply -auto-approve > output.txt"
             }
