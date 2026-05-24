@@ -1,41 +1,42 @@
 // Infrastructure Pipelines
+
 pipeline {
     agent any
 
     stages {
-        stage ('git checkout'){
-            steps {
-            echo ("Check out the code from the defined GITHub repo")
-            }
-        }
-        stage ("Initialize the Terraform"){
-            steps {
-                sh "terraform init"
-            }
-        }
-        stage ("Validate the tf code"){
-            steps {
-                sh "terraform validate"
-            }
-        }
-        stage ("Verify the resouces that will be created"){
-            steps {
-                sh "terraform plan > plan.txt"
-                sh "cat plan.txt"
-            }
-        }
-        stage ("Create the complete Infra") {
 
+        stage('git checkout') {
+            steps {
+                echo "Check out the code from the defined GITHub repo"
+            }
+        }
+
+        stage("Terraform Execution") {
             steps {
 
-            input(
-            message: 'Approve Terraform Apply?',
-            submitter: 'sharan'
-            )
-            sh 'terraform apply -auto-approve > output.txt'
+                // 🔐 ONE TIME AWS CREDENTIALS FOR ALL TERRAFORM STEPS
+                withCredentials([
+                    [$class: 'AmazonWebServicesCredentialsBinding',
+                     credentialsId: 'aws-creds']
+                ]) {
+
+                    sh "terraform init"
+
+                    sh "terraform validate"
+
+                    sh "terraform plan > plan.txt"
+                    sh "cat plan.txt"
+
+                    input message: 'Approve Terraform Apply?', submitter: 'sharan'
+
+                    sh "terraform apply -auto-approve > output.txt"
+
+                    sh "cat output.txt"
+                }
             }
         }
-        stage ("Show the outputs"){
+
+        stage("Show outputs") {
             steps {
                 sh "cat output.txt"
             }
