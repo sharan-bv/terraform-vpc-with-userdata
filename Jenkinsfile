@@ -1,42 +1,51 @@
-// Infrastructure Pipelines
-
+# Infrastructure Pipelines
 pipeline {
     agent any
 
+    environment {
+        // This automatically binds your Jenkins AWS credentials to the env variables Terraform looks for
+        AWS_CREDS = credentials('aws_creds')
+    }
+
     stages {
-
-        stage('git checkout') {
+        stage("Initialize the Terraform") {
             steps {
-                echo "Check out the code from the defined GITHub repo"
-            }
-        }
-
-        stage("Terraform Execution") {
-            steps {
-
-                // 🔐 ONE TIME AWS CREDENTIALS FOR ALL TERRAFORM STEPS
-                withCredentials([
-                    [$class: 'AmazonWebServicesCredentialsBinding',
-                     credentialsId: 'aws-creds']
-                ]) {
-
+                // We wrap the terraform commands using the credentials environment variables
+                withEnv(["AWS_ACCESS_KEY_ID=${env.AWS_CREDS_USR}", "AWS_SECRET_ACCESS_KEY=${env.AWS_CREDS_PSW}"]) {
                     sh "terraform init"
-
-                    sh "terraform validate"
-
-                    sh "terraform plan > plan.txt"
-                    sh "cat plan.txt"
-
-                    input message: 'Approve Terraform Apply?', submitter: 'sharan'
-
-                    sh "terraform apply -auto-approve > output.txt"
-
-                    sh "cat output.txt"
                 }
             }
         }
-
-        stage("Show outputs") {
+        
+        stage("Validate the tf code") {
+            steps {
+                sh "terraform validate"
+            }
+        }
+        
+        stage("Verify the resources that will be created") {
+            steps {
+                withEnv(["AWS_ACCESS_KEY_ID=${env.AWS_CREDS_USR}", "AWS_SECRET_ACCESS_KEY=${env.AWS_CREDS_PSW}"]) {
+                    sh "terraform plan > plan.txt"
+                    sh "cat plan.txt" // Fixed: Added missing quotes around the command
+                }
+            }
+        }
+        
+        stage("Create the complete Infra") {
+            // Fixed: Input steps in Declarative pipelines need a 'message' parameter
+            input {
+                message "Should we deploy the infrastructure?"
+                submitter "sharan"
+            }
+            steps {
+                withEnv(["AWS_ACCESS_KEY_ID=${env.AWS_CREDS_USR}", "AWS_SECRET_ACCESS_KEY=${env.AWS_CREDS_PSW}"]) {
+                    sh "terraform apply -auto-approve > output.txt"
+                }
+            }
+        }
+        
+        stage("Show the outputs") {
             steps {
                 sh "cat output.txt"
             }
