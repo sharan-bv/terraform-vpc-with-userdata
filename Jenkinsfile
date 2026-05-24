@@ -1,47 +1,37 @@
-// Infrastructure Pipelines
+# Infrastructure Pipelines
 pipeline {
     agent any
 
     stages {
-        stage("Initialize the Terraform") {
+        stage("Run Terraform Workflow") {
             steps {
-                // This explicitly binds the username and password fields to standard env variables
+                // Wrapping all steps globally so credentials persist across init, validate, plan, and apply
                 withCredentials([usernamePassword(credentialsId: 'aws_creds', usernameVariable: 'AWS_ACCESS_KEY_ID', passwordVariable: 'AWS_SECRET_ACCESS_KEY')]) {
+                    
+                    echo "Starting Terraform Initialization..."
                     sh "terraform init"
-                }
-            }
-        }
-        
-        stage("Validate the tf code") {
-            steps {
-                sh "terraform validate"
-            }
-        }
-        
-        stage("Verify the resources that will be created") {
-            steps {
-                withCredentials([usernamePassword(credentialsId: 'aws_creds', usernameVariable: 'AWS_ACCESS_KEY_ID', passwordVariable: 'AWS_SECRET_ACCESS_KEY')]) {
+                    
+                    echo "Validating Configuration..."
+                    sh "terraform validate"
+                    
+                    echo "Generating Plan..."
                     sh "terraform plan > plan.txt"
                     sh "cat plan.txt"
                 }
             }
         }
         
-        stage("Create the complete Infra") {
+        stage("Approval Gate") {
             input {
                 message "Should we deploy the infrastructure?"
                 submitter "sharan"
             }
             steps {
                 withCredentials([usernamePassword(credentialsId: 'aws_creds', usernameVariable: 'AWS_ACCESS_KEY_ID', passwordVariable: 'AWS_SECRET_ACCESS_KEY')]) {
+                    echo "Applying Changes..."
                     sh "terraform apply -auto-approve > output.txt"
+                    sh "cat output.txt"
                 }
-            }
-        }
-        
-        stage("Show the outputs") {
-            steps {
-                sh "cat output.txt"
             }
         }
     }
