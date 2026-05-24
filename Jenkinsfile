@@ -1,4 +1,4 @@
-# Infrastructure Pipelines
+// Infrastructure Pipelines
 pipeline {
     agent any
 
