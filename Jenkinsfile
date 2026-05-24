@@ -3,6 +3,11 @@ pipeline {
     agent any
 
     stages {
+        stage ('git checkout'){
+            steps {
+            echo ("Check out the code from the defined GITHub repo")
+            }
+        }
         stage ("Initialize the Terraform"){
             steps {
                 sh "terraform init"
