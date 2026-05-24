@@ -19,10 +19,15 @@ pipeline {
                 sh "cat plan.txt"
             }
         }
-        stage ("Create the complete Infra"){
-            input message: 'Approve Terraform Apply?', submitter: 'sharan'
+        stage ("Create the complete Infra") {
+
             steps {
-                sh "terraform apply -auto-approve > output.txt"
+
+            input(
+            message: 'Approve Terraform Apply?',
+            submitter: 'sharan'
+            )
+            sh 'terraform apply -auto-approve > output.txt'
             }
         }
         stage ("Show the outputs"){
