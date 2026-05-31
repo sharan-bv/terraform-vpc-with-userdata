@@ -200,7 +200,7 @@ resource "aws_iam_role_policy_attachment" "ssm_policy" {
 ############################
 
 resource "aws_iam_instance_profile" "ssm_profile" {
-  name = "ssm-instance-profile"
+  name = "ssm-instance-profile-31-May-2026"
   role = aws_iam_role.ssm_role.name
 }
 
