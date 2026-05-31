@@ -170,7 +170,7 @@ resource "aws_security_group" "ec2_sg" {
 ############################
 
 resource "aws_iam_role" "ssm_role" {
-  name = "ec2-ssm-role"
+  name = "ec2-ssm-role-terraform-31-05-2026"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
